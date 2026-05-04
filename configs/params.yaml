@@ -1,0 +1,21 @@
+dataset:
+  data_dir: data/deepfake_images
+  image_size: 224
+  val_split: 0.1
+  test_split: 0.1
+  split_seed: 42
+
+training:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 0.0002
+  weight_decay: 0.0001
+  label_smoothing: 0.05
+  focal_gamma: 2.0
+  use_class_weights: true
+  freeze_backbone: false
+
+inference:
+  fake_threshold: 0.42
+  frame_aggregation: mean_max
+  mean_max_weight: 0.45

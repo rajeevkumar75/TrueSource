@@ -1,0 +1,8 @@
+torch
+torchvision
+Pillow
+opencv-python
+streamlit
+jupyter
+
+
