@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="TrueSource — AI-powered deepfake and synthetic content detection for images, videos, and text." />
+    <title>TrueSource — Authenticity Intelligence Platform</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div id="toast-container"></div>
+
+    <!-- Navbar -->
+    <header class="site-header" id="site-header">
+      <div class="container header-inner">
+        <a href="#home" class="brand-link">
+          <div class="brand-icon">TS</div>
+          <span class="brand-text">TrueSource</span>
+        </a>
+        <nav class="site-nav" id="site-nav">
+          <a href="#home" class="nav-link active">Home</a>
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#analyze" class="nav-link">Analyze</a>
+          <a href="#about" class="nav-link">About</a>
+          <a href="#contact" class="nav-link">Contact</a>
+        </nav>
+        <a href="#analyze" class="btn btn-primary btn-sm nav-cta">Try Analyzer</a>
+        <button class="btn-icon mobile-toggle" id="mobile-toggle" aria-label="Menu">☰</button>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section id="home" class="hero section">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="eyebrow">Free · No sign-in · Powered by your models</span>
+          <h1>Verify what's <span class="gradient-text">real</span> in a synthetic world</h1>
+          <p class="hero-desc">
+            TrueSource detects deepfakes in images and videos, and identifies AI-generated text —
+            all in one modern platform built on ResNet18 and DistilBERT.
+          </p>
+          <div class="hero-actions">
+            <a href="#analyze" class="btn btn-primary">Start analyzing →</a>
+            <a href="#about" class="btn btn-outline">Learn more</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat"><strong>3</strong><span>Detection modes</span></div>
+            <div class="stat"><strong id="hero-device">—</strong><span>Compute device</span></div>
+            <div class="stat"><strong id="hero-status">—</strong><span>Model status</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card glass">
+            <div class="hero-card-header">
+              <span class="live-badge" id="live-badge">
+                <span class="live-dot"></span>
+                <span id="live-text">Connecting…</span>
+              </span>
+            </div>
+            <div class="hero-scan-preview">
+              <div class="scan-line"></div>
+              <div class="scan-types">
+                <div class="scan-type"><span>🖼</span> Image</div>
+                <div class="scan-type"><span>🎬</span> Video</div>
+                <div class="scan-type"><span>📝</span> Text</div>
+              </div>
+            </div>
+            <p class="hero-card-caption">Upload any media or paste text for instant authenticity scoring</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Capabilities</span>
+          <h2>Everything you need to spot synthetic content</h2>
+          <p>Three specialized models working together to protect trust in digital media.</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card glass">
+            <div class="feature-icon image">🖼</div>
+            <h3>Image Detection</h3>
+            <p>ResNet18 classifier trained on real vs fake images. Upload photos and get confidence scores with class probabilities.</p>
+            <a href="#analyze" class="feature-link" data-tab="image">Try image scan →</a>
+          </article>
+          <article class="feature-card glass">
+            <div class="feature-icon video">🎬</div>
+            <h3>Video Detection</h3>
+            <p>Extracts frames from video clips and aggregates per-frame deepfake scores using mean, max, or blended strategies.</p>
+            <a href="#analyze" class="feature-link" data-tab="video">Try video scan →</a>
+          </article>
+          <article class="feature-card glass">
+            <div class="feature-icon text">📝</div>
+            <h3>Text Detection</h3>
+            <p>DistilBERT model distinguishes human-written text from AI-generated content with tunable thresholds.</p>
+            <a href="#analyze" class="feature-link" data-tab="text">Try text scan →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how-it-works" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Process</span>
+          <h2>How TrueSource works</h2>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <h3>Upload or paste</h3>
+            <p>Drop an image, video file, or paste any text you want to verify.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <h3>Model inference</h3>
+            <p>Your trained PyTorch models run locally — ResNet18 for media, DistilBERT for text.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <h3>Get results</h3>
+            <p>See verdict, confidence ring, probability breakdown, and inference time in milliseconds.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analyze -->
+    <section id="analyze" class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Analyzer</span>
+          <h2>Run detection now</h2>
+          <p>Free to use — connected directly to your models in the <code>models/</code> folder.</p>
+        </div>
+
+        <div class="model-grid" id="model-grid"></div>
+
+        <div class="analyzer-tabs">
+          <button class="tab-btn active" data-tab="image">🖼 Image</button>
+          <button class="tab-btn" data-tab="video">🎬 Video</button>
+          <button class="tab-btn" data-tab="text">📝 Text</button>
+        </div>
+
+        <!-- Image tab -->
+        <div id="tab-image" class="tab-panel active">
+          <div class="grid-2">
+            <div class="panel glass">
+              <div class="panel-title">Upload image</div>
+              <div class="file-drop" id="img-drop">
+                <input type="file" id="img-input" accept="image/*" />
+                <div class="file-drop-icon">🖼</div>
+                <p><strong>Drop image here</strong> or click to browse</p>
+                <p class="file-hint">PNG · JPG · WEBP · BMP</p>
+              </div>
+              <img id="img-preview" class="preview-img hidden" alt="Preview" />
+              <div class="form-group" style="margin-top: 20px">
+                <label>P(fake) threshold <span class="range-value" id="img-thresh-val">0.42</span></label>
+                <input type="range" id="img-threshold" min="0.25" max="0.55" step="0.01" value="0.42" />
+              </div>
+              <button class="btn btn-primary" id="img-analyze" disabled style="width: 100%">Analyze image →</button>
+            </div>
+            <div class="panel glass">
+              <div class="panel-title">Results</div>
+              <div id="img-result">
+                <p class="placeholder-text">Upload an image to run the ResNet18 deepfake detector.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video tab -->
+        <div id="tab-video" class="tab-panel hidden">
+          <div class="grid-2">
+            <div class="panel glass">
+              <div class="panel-title">Upload video</div>
+              <div class="file-drop" id="vid-drop">
+                <input type="file" id="vid-input" accept="video/*" />
+                <div class="file-drop-icon">🎬</div>
+                <p><strong>Drop video here</strong> or click to browse</p>
+                <p class="file-hint">MP4 · AVI · MOV · MKV · WEBM</p>
+              </div>
+              <video id="vid-preview" class="preview-video hidden" controls></video>
+              <div class="settings-row" style="margin-top: 20px">
+                <div class="form-group" style="margin: 0">
+                  <label>P(fake) <span class="range-value" id="vid-thresh-val">0.42</span></label>
+                  <input type="range" id="vid-threshold" min="0.25" max="0.55" step="0.01" value="0.42" />
+                </div>
+                <div class="form-group" style="margin: 0">
+                  <label>Max frames</label>
+                  <select id="vid-frames">
+                    <option value="16">16</option>
+                    <option value="32" selected>32</option>
+                    <option value="48">48</option>
+                    <option value="64">64</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin: 0">
+                  <label>Aggregation</label>
+                  <select id="vid-aggregation">
+                    <option value="mean_max" selected>mean_max</option>
+                    <option value="max">max</option>
+                    <option value="mean">mean</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="vid-analyze" disabled style="width: 100%; margin-top: 16px">Analyze video →</button>
+            </div>
+            <div class="panel glass">
+              <div class="panel-title">Results</div>
+              <div id="vid-result">
+                <p class="placeholder-text">Upload a video for frame-level deepfake analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text tab -->
+        <div id="tab-text" class="tab-panel hidden">
+          <div class="grid-2">
+            <div class="panel glass">
+              <div class="panel-title">Input text</div>
+              <div class="form-group">
+                <textarea id="text-input" placeholder="Paste a paragraph, email, essay, or article…"></textarea>
+              </div>
+              <div class="form-group">
+                <label>P(AI) threshold <span class="range-value" id="text-thresh-val">0.50</span></label>
+                <input type="range" id="text-threshold" min="0.35" max="0.65" step="0.01" value="0.5" />
+              </div>
+              <button class="btn btn-primary" id="text-analyze" style="width: 100%">Analyze text →</button>
+            </div>
+            <div class="panel glass">
+              <div class="panel-title">Results</div>
+              <div id="text-result">
+                <p class="placeholder-text">Paste text to detect AI-generated content with DistilBERT.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel glass" style="margin-top: 24px">
+          <div class="grid-2">
+            <div>
+              <div class="panel-title">Recent scans</div>
+              <div class="history-list" id="history-list">
+                <p class="placeholder-text">No scans yet.</p>
+              </div>
+            </div>
+            <div>
+              <div class="panel-title">System info</div>
+              <div id="system-info" class="system-info"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section section-alt">
+      <div class="container">
+        <div class="about-grid">
+          <div class="about-content">
+            <span class="eyebrow">About TrueSource</span>
+            <h2>Built for trust in the age of generative AI</h2>
+            <p>
+              TrueSource is a multi-model authenticity platform that helps journalists, educators,
+              researchers, and everyday users verify whether images, videos, and text are genuine or
+              synthetically generated.
+            </p>
+            <p>
+              The project combines computer vision and natural language processing into a single
+              web experience — train your own models, deploy them locally, and analyze content
+              without sending data to third-party APIs.
+            </p>
+            <ul class="about-list">
+              <li>✓ Open-source friendly — runs entirely on your machine</li>
+              <li>✓ Image & video via ResNet18 frame classifier</li>
+              <li>✓ Text via fine-tuned DistilBERT</li>
+              <li>✓ Free to use with no account required</li>
+            </ul>
+          </div>
+          <div class="about-cards">
+            <div class="about-stat-card glass">
+              <strong>Vision</strong>
+              <p>Make deepfake detection accessible to everyone, not just ML researchers.</p>
+            </div>
+            <div class="about-stat-card glass">
+              <strong>Tech Stack</strong>
+              <p>PyTorch · Flask · Transformers · OpenCV · Custom trained weights</p>
+            </div>
+            <div class="about-stat-card glass">
+              <strong>Use Cases</strong>
+              <p>News verification, academic integrity, social media moderation, research.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section">
+      <div class="container contact-grid">
+        <div>
+          <span class="eyebrow">Contact</span>
+          <h2>Get in touch</h2>
+          <p class="contact-desc">
+            Questions about TrueSource, model training, or integration? Send us a message.
+          </p>
+          <div class="contact-info">
+            <div class="contact-item">
+              <strong>Project</strong>
+              <span>TrueSource Detection Suite</span>
+            </div>
+            <div class="contact-item">
+              <strong>GitHub</strong>
+              <span>github.com/truesource</span>
+            </div>
+            <div class="contact-item">
+              <strong>Status</strong>
+              <span id="contact-model-status">Checking models…</span>
+            </div>
+          </div>
+        </div>
+        <form class="contact-form glass" id="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Name</label>
+            <input type="text" id="contact-name" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input type="text" id="contact-email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" rows="4" placeholder="How can we help?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">Send message →</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <div class="brand-icon">TS</div>
+          <div>
+            <strong>TrueSource</strong>
+            <p>Authenticity intelligence for images, video & text.</p>
+          </div>
+        </div>
+        <div class="footer-links">
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#analyze">Analyze</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <p class="footer-copy">© 2026 TrueSource. Free to use · No sign-in required.</p>
+      </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+dataset:
+  data_path: "data/text data/all.jsonl"
+  max_length: 256
+  val_split: 0.1
+  test_split: 0.1
+  split_seed: 42
+
+training:
+  model_name: distilbert-base-uncased
+  epochs: 5
+  batch_size: 8
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  model_path: models/text_detection_best
+  early_stopping_patience: 3
+  use_class_weights: true
+  classifier_dropout: 0.2
+
+inference:
+  ai_threshold: 0.5
+  max_length: 256

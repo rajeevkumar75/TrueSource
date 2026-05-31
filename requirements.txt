@@ -3,6 +3,12 @@ torchvision
 Pillow
 opencv-python
 streamlit
+flask
 jupyter
+transformers
+pyyaml
+accelerate
+safetensors
+huggingface_hub
 
 
