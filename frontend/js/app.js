@@ -11,7 +11,7 @@ function toast(message, type = "success") {
   el.className = `toast ${type}`;
   el.textContent = message;
   container.appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => el.remove(), 3500);    
 }
 
 function saveHistory(type, label, confidence) {
