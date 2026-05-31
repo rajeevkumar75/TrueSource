@@ -94,7 +94,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no_freeze_backbone",
         action="store_true",
-        help="Deprecated alias to fine-tune full model",
+        help="Deprecated alias to fine-tune full model",   
     )
     parser.add_argument(
         "--no_class_weights",
