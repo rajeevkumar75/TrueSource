@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import time
 from functools import lru_cache
@@ -8,6 +9,7 @@ from pathlib import Path
 import torch
 from PIL import Image
 from torchvision import transforms
+from huggingface_hub import hf_hub_download
 
 from src.image_detection.data_transformation import IMAGENET_MEAN, IMAGENET_STD
 from src.image_detection.inference_utils import (
@@ -21,8 +23,10 @@ from src.text_detection.predict import predict_text
 from src.video_detection.frame_extractor import extract_video_frames
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_IMAGE_MODEL = PROJECT_ROOT / "models" / "image_detection_best.pth"
-DEFAULT_TEXT_MODEL = PROJECT_ROOT / "models" / "text_detection_best"
+DEFAULT_IMAGE_REPO = "rajeevkumar75/truesource-image-detector"
+DEFAULT_IMAGE_FILENAME = "image_detection_best.pth"
+DEFAULT_IMAGE_CLASSES_FILENAME = "image_detection_best.classes.txt"
+DEFAULT_TEXT_REPO = "rajeevkumar75/truesource-text-model"
 DEFAULT_DATASET_ROOT = PROJECT_ROOT / "data" / "deepfake_images"
 IMAGE_SIZE = 224
 _MODELS_LOADED = {"image": False, "text": False}
@@ -37,15 +41,22 @@ _IMAGE_TRANSFORM = transforms.Compose(
 
 
 def discover_class_names(dataset_root: Path | None = None) -> list[str]:
-    classes_file = DEFAULT_IMAGE_MODEL.with_suffix(".classes.txt")
-    if classes_file.exists():
+    try:
+        token = os.getenv("HF_TOKEN")
+        cached_file = hf_hub_download(
+            repo_id=DEFAULT_IMAGE_REPO, 
+            filename=DEFAULT_IMAGE_CLASSES_FILENAME, 
+            token=token
+        )
         names = [
             line.strip()
-            for line in classes_file.read_text(encoding="utf-8").splitlines()
+            for line in Path(cached_file).read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
         if len(names) >= 2:
             return names
+    except Exception:
+        pass
 
     root = dataset_root or DEFAULT_DATASET_ROOT
     train_dir = root / "train"
@@ -82,16 +93,22 @@ def warmup_models() -> dict[str, bool]:
     """Load models into memory so first user request is fast."""
     names = discover_class_names()
     loaded = {"image": False, "text": False}
+    token = os.getenv("HF_TOKEN")
 
-    if DEFAULT_IMAGE_MODEL.exists():
-        _get_image_model(str(DEFAULT_IMAGE_MODEL), len(names))
+    try:
+        path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=token)
+        _get_image_model(path, len(names))
         loaded["image"] = True
         _MODELS_LOADED["image"] = True
+    except Exception as e:
+        print("Image model warmup failed:", e)
 
-    if DEFAULT_TEXT_MODEL.exists():
-        _ensure_text_model(str(DEFAULT_TEXT_MODEL))
+    try:
+        _ensure_text_model(DEFAULT_TEXT_REPO)
         loaded["text"] = True
         _MODELS_LOADED["text"] = True
+    except Exception as e:
+        print("Text model warmup failed:", e)
 
     return loaded
 
@@ -102,32 +119,31 @@ def get_models_loaded() -> dict[str, bool]:
 
 def get_app_status() -> dict:
     text_threshold = 0.5
-    if DEFAULT_TEXT_MODEL.exists():
-        try:
-            text_threshold = load_ai_threshold(str(DEFAULT_TEXT_MODEL))
-        except Exception:  # noqa: BLE001
-            pass
+    try:
+        text_threshold = load_ai_threshold(DEFAULT_TEXT_REPO)
+    except Exception:  # noqa: BLE001
+        pass
 
     return {
-        "image_model": DEFAULT_IMAGE_MODEL.exists(),
-        "text_model": DEFAULT_TEXT_MODEL.exists(),
-        "video_model": DEFAULT_IMAGE_MODEL.exists(),
+        "image_model": True,
+        "text_model": True,
+        "video_model": True,
         "class_names": discover_class_names(),
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "models": {
             "image": {
-                "path": str(DEFAULT_IMAGE_MODEL),
-                "ready": DEFAULT_IMAGE_MODEL.exists(),
+                "path": DEFAULT_IMAGE_REPO,
+                "ready": _MODELS_LOADED["image"],
                 "type": "ResNet18",
             },
             "video": {
-                "path": str(DEFAULT_IMAGE_MODEL),
-                "ready": DEFAULT_IMAGE_MODEL.exists(),
+                "path": DEFAULT_IMAGE_REPO,
+                "ready": _MODELS_LOADED["image"],
                 "type": "Frame-level ResNet18",
             },
             "text": {
-                "path": str(DEFAULT_TEXT_MODEL),
-                "ready": DEFAULT_TEXT_MODEL.exists(),
+                "path": DEFAULT_TEXT_REPO,
+                "ready": _MODELS_LOADED["text"],
                 "type": "DistilBERT",
                 "ai_threshold": text_threshold,
             },
@@ -143,7 +159,9 @@ def predict_image_upload(
 ) -> dict:
     started = time.perf_counter()
     names = class_names or discover_class_names()
-    path = model_path or str(DEFAULT_IMAGE_MODEL)
+    path = model_path
+    if not path:
+        path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
     if not Path(path).exists():
         raise FileNotFoundError(f"Image model not found: {path}")
 
@@ -186,7 +204,9 @@ def predict_video_upload(
 ) -> dict:
     started = time.perf_counter()
     names = class_names or discover_class_names()
-    path = model_path or str(DEFAULT_IMAGE_MODEL)
+    path = model_path
+    if not path:
+        path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
     if not Path(path).exists():
         raise FileNotFoundError(f"Video model not found: {path}")
 
@@ -255,9 +275,7 @@ def predict_text_input(
     model_path: str | None = None,
 ) -> dict:
     started = time.perf_counter()
-    path = model_path or str(DEFAULT_TEXT_MODEL)
-    if not Path(path).exists():
-        raise FileNotFoundError(f"Text model not found: {path}")
+    path = model_path or DEFAULT_TEXT_REPO
 
     threshold = ai_threshold
     if threshold is None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,26 +17,31 @@ LOW_CONFIDENCE_CUTOFF = 0.52
 
 @lru_cache(maxsize=2)
 def _load_model_and_tokenizer(model_path: str) -> tuple[torch.nn.Module, object, torch.device]:
-    model_dir = Path(model_path)
-    if not model_dir.exists():
-        raise FileNotFoundError(f"Model directory not found: {model_dir.resolve()}")
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    tokenizer = AutoTokenizer.from_pretrained(model_dir)
-    model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+    token = os.getenv("HF_TOKEN")
+    
+    tokenizer = AutoTokenizer.from_pretrained(model_path, token=token)
+    model = AutoModelForSequenceClassification.from_pretrained(model_path, token=token)
     model.to(device)
     model.eval()
     return model, tokenizer, device
 
 
 def load_ai_threshold(model_path: str) -> float:
-    config_file = Path(model_path) / "inference.json"
-    if not config_file.exists():
-        return DEFAULT_AI_THRESHOLD
+    from huggingface_hub import hf_hub_download
+    token = os.getenv("HF_TOKEN")
     try:
-        payload = json.loads(config_file.read_text(encoding="utf-8"))
+        if Path(model_path).exists():
+            config_file = Path(model_path) / "inference.json"
+            if not config_file.exists():
+                return DEFAULT_AI_THRESHOLD
+            payload = json.loads(config_file.read_text(encoding="utf-8"))
+        else:
+            cached = hf_hub_download(repo_id=model_path, filename="inference.json", token=token)
+            payload = json.loads(Path(cached).read_text(encoding="utf-8"))
+            
         return float(payload.get("ai_threshold", DEFAULT_AI_THRESHOLD))
-    except (json.JSONDecodeError, TypeError, ValueError):
+    except Exception:
         return DEFAULT_AI_THRESHOLD
 
 

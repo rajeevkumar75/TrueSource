@@ -10,5 +10,5 @@ pyyaml
 accelerate
 safetensors
 huggingface_hub
-
+python-dotenv
 

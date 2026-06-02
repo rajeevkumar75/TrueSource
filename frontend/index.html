@@ -1,370 +1,595 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="TrueSource — AI-powered deepfake and synthetic content detection for images, videos, and text." />
-    <title>TrueSource — Authenticity Intelligence Platform</title>
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
-  <body>     
-    <div id="toast-container"></div>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TrueSource — AI-powered deepfake and synthetic content detection for images, videos, and text. Free, local, private." />
+  <meta name="keywords" content="deepfake detection, AI text detection, image authentication, video forensics, TrueSource" />
+  <title>TrueSource — Authenticity Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="toast-container" aria-live="polite"></div>
 
-    <!-- Navbar -->
-    <header class="site-header" id="site-header">
-      <div class="container header-inner">
-        <a href="#home" class="brand-link">
-          <div class="brand-icon">TS</div>
-          <span class="brand-text">TrueSource</span>
-        </a>
-        <nav class="site-nav" id="site-nav">
-          <a href="#home" class="nav-link active">Home</a>
-          <a href="#features" class="nav-link">Features</a>
-          <a href="#analyze" class="nav-link">Analyze</a>
-          <a href="#about" class="nav-link">About</a>
-          <a href="#contact" class="nav-link">Contact</a>
-        </nav>
-        <a href="#analyze" class="btn btn-primary btn-sm nav-cta">Try Analyzer</a>
-        <button class="btn-icon mobile-toggle" id="mobile-toggle" aria-label="Menu">☰</button>
+  <!-- Ambient background -->
+  <div class="bg-scene" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="site-header" id="site-header">
+    <div class="container hdr-inner">
+      <a href="#home" class="brand" aria-label="TrueSource Home">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none">
+            <polygon points="18,2 34,11 34,25 18,34 2,25 2,11" stroke="white" stroke-width="2.5" fill="none"/>
+            <circle cx="18" cy="18" r="5" fill="white" opacity="0.95"/>
+            <line x1="18" y1="2" x2="18" y2="34" stroke="white" stroke-width="1.2" opacity="0.3"/>
+            <line x1="2" y1="11" x2="34" y2="11" stroke="white" stroke-width="1.2" opacity="0.3"/>
+            <line x1="2" y1="25" x2="34" y2="25" stroke="white" stroke-width="1.2" opacity="0.3"/>
+          </svg>
+        </div>
+        <span class="brand-name">TrueSource</span>
+        <span class="brand-tag">AI</span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="#home" class="nav-link active">Home</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#analyze" class="nav-link">Analyze</a>
+        <a href="#about" class="nav-link">About</a>
+      </nav>
+
+      <div class="hdr-actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme" title="Switch light/dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <a href="#analyze" class="btn btn-primary btn-sm">Try Analyzer</a>
+        <button class="hamburger" id="mobile-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Hero -->
-    <section id="home" class="hero section">
-      <div class="container hero-grid">
-        <div class="hero-content">
-          <span class="eyebrow">Free · No sign-in · Powered by your models</span>
-          <h1>Verify what's <span class="gradient-text">real</span> in a synthetic world</h1>
-          <p class="hero-desc">
-            TrueSource detects deepfakes in images and videos, and identifies AI-generated text —
-            all in one modern platform built on ResNet18 and DistilBERT.
-          </p>
-          <div class="hero-actions">
-            <a href="#analyze" class="btn btn-primary">Start analyzing →</a>
-            <a href="#about" class="btn btn-outline">Learn more</a>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section id="home" class="section hero">
+    <div class="container hero-layout">
+      <div class="hero-content">
+        <div class="live-pill" id="live-pill">
+          <span class="pulse-dot"></span>
+          <span id="live-pill-text">Connecting to models…</span>
+        </div>
+        <h1>Detect the <span class="gradient-text">synthetic</span> from the real</h1>
+        <p class="hero-lead">
+          TrueSource is a free, privacy-first authenticity platform that detects deepfakes in images &amp; videos, 
+          and identifies AI-generated text — powered by ResNet18 &amp; DistilBERT running entirely on your machine.
+        </p>
+        <div class="hero-ctas">
+          <a href="#analyze" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            Start Analyzing
+          </a>
+          <a href="#about" class="btn btn-ghost">Learn how it works →</a>
+        </div>
+        <div class="hero-chips">
+          <div class="hero-chip">
+            <span>🖼️</span>
+            <div><strong>Image</strong><em>ResNet18 CNN</em></div>
           </div>
-          <div class="hero-stats">
-            <div class="stat"><strong>3</strong><span>Detection modes</span></div>
-            <div class="stat"><strong id="hero-device">—</strong><span>Compute device</span></div>
-            <div class="stat"><strong id="hero-status">—</strong><span>Model status</span></div>
+          <div class="hero-chip">
+            <span>🎬</span>
+            <div><strong>Video</strong><em>Frame-level</em></div>
+          </div>
+          <div class="hero-chip">
+            <span>📝</span>
+            <div><strong>Text</strong><em>DistilBERT</em></div>
+          </div>
+          <div class="hero-chip">
+            <span>⚡</span>
+            <div><strong id="hero-device">—</strong><em>Compute</em></div>
           </div>
         </div>
-        <div class="hero-visual">
-          <div class="hero-card glass">
-            <div class="hero-card-header">
-              <span class="live-badge" id="live-badge">
-                <span class="live-dot"></span>
-                <span id="live-text">Connecting…</span>
-              </span>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hv-card glass">
+          <div class="hv-topbar">
+            <div class="tl-dots"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div>
+            <span class="hv-filename">truesource.scan</span>
+          </div>
+          <div class="hv-viewport">
+            <div class="hv-beam"></div>
+            <div class="hv-crosshair">
+              <div class="ch-h"></div><div class="ch-v"></div>
+              <div class="ch-ring"></div>
             </div>
-            <div class="hero-scan-preview">
-              <div class="scan-line"></div>
-              <div class="scan-types">
-                <div class="scan-type"><span>🖼</span> Image</div>
-                <div class="scan-type"><span>🎬</span> Video</div>
-                <div class="scan-type"><span>📝</span> Text</div>
+            <div class="hv-overlay">
+              <div class="hv-tag">SCANNING…</div>
+            </div>
+          </div>
+          <div class="hv-metrics">
+            <div class="hv-metric-row">
+              <span>Authenticity</span>
+              <div class="hv-bar"><div class="hv-bar-fill" style="width:87%;--c:#10b981"></div></div>
+              <span>87%</span>
+            </div>
+            <div class="hv-metric-row">
+              <span>Confidence</span>
+              <div class="hv-bar"><div class="hv-bar-fill" style="width:92%;--c:#7c3aed"></div></div>
+              <span>92%</span>
+            </div>
+            <div class="hv-verdict">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              AUTHENTIC — REAL
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FEATURES ═══════════════ -->
+  <section id="features" class="section section-stripe">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Capabilities</span>
+        <h2>Three models. One platform. Complete coverage.</h2>
+        <p>Purpose-built neural networks analyze every dimension of synthetic content with state-of-the-art accuracy.</p>
+      </div>
+      <div class="features-grid">
+        <article class="feat-card glass" data-accent="#7c3aed">
+          <div class="feat-accent-bar"></div>
+          <div class="feat-icon" style="--ic:#7c3aed;--ig:rgba(124,58,237,0.15)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          </div>
+          <div class="feat-arch">ResNet18 CNN</div>
+          <h3>Image Deepfake Detection</h3>
+          <p>Binary classification using a fine-tuned ResNet18 convolutional neural network. Supports JPEG, PNG, WEBP, BMP with adjustable confidence thresholds.</p>
+          <ul class="feat-bullets">
+            <li>Upload file <em>or</em> paste image URL</li>
+            <li>Adjustable fake probability threshold</li>
+            <li>Full probability breakdown chart</li>
+            <li>Export results as JSON</li>
+          </ul>
+          <a href="#analyze" class="feat-link" data-tab="image">Scan an image →</a>
+        </article>
+
+        <article class="feat-card glass" data-accent="#0ea5e9">
+          <div class="feat-accent-bar" style="background:linear-gradient(90deg,#0ea5e9,#38bdf8)"></div>
+          <div class="feat-icon" style="--ic:#0ea5e9;--ig:rgba(14,165,233,0.15)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+          </div>
+          <div class="feat-arch">Frame-Level Analysis</div>
+          <h3>Video Deepfake Detection</h3>
+          <p>Intelligent frame extraction and multi-frame aggregation using mean/max pooling. Analyzes temporal consistency across up to 64 frames per video clip.</p>
+          <ul class="feat-bullets">
+            <li>Uniform frame sampling</li>
+            <li>Mean, Max, or Mean-Max aggregation</li>
+            <li>Frame count &amp; timing stats</li>
+            <li>Support for MP4, AVI, MOV, WEBM</li>
+          </ul>
+          <a href="#analyze" class="feat-link" data-tab="video" style="color:#38bdf8">Scan a video →</a>
+        </article>
+
+        <article class="feat-card glass" data-accent="#f97316">
+          <div class="feat-accent-bar" style="background:linear-gradient(90deg,#f97316,#fb923c)"></div>
+          <div class="feat-icon" style="--ic:#f97316;--ig:rgba(249,115,22,0.15)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          </div>
+          <div class="feat-arch">DistilBERT NLP</div>
+          <h3>AI Text Detection</h3>
+          <p>Fine-tuned DistilBERT transformer trained to distinguish human-written from AI-generated content. Supports single analysis and batch paragraph mode.</p>
+          <ul class="feat-bullets">
+            <li>Single &amp; batch paragraph analysis</li>
+            <li>Upload .txt files directly</li>
+            <li>Live word &amp; character counter</li>
+            <li>Tunable AI probability threshold</li>
+          </ul>
+          <a href="#analyze" class="feat-link" data-tab="text" style="color:#fb923c">Scan text →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section id="how-it-works" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Architecture</span>
+        <h2>How TrueSource works</h2>
+      </div>
+      <div class="steps-track">
+        <div class="step-node">
+          <div class="step-circle">01</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <h3>Upload or Link</h3>
+          <p>Drop an image/video file, paste a public URL, or type/upload text. All data stays local — nothing is ever sent externally.</p>
+        </div>
+
+        <div class="step-node">
+          <div class="step-circle">02</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <h3>Local Inference</h3>
+          <p>Your Flask backend fetches model weights from your private HuggingFace repo and runs PyTorch inference on your hardware (CPU or CUDA).</p>
+        </div>
+
+        <div class="step-node">
+          <div class="step-circle">03</div>
+          <div class="step-line last"></div>
+        </div>
+        <div class="step-body">
+          <h3>Instant Results</h3>
+          <p>Confidence scores, probability bars, a clear verdict, and a full exportable JSON report — all rendered in milliseconds.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ANALYZER ═══════════════ -->
+  <section id="analyze" class="section section-stripe">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Analyzer Dashboard</span>
+        <h2>Run Diagnostics</h2>
+        <p>Real-time inference against your custom HuggingFace models running locally.</p>
+      </div>
+
+      <!-- Model Status Cards -->
+      <div class="model-status-row" id="model-grid"></div>
+
+      <!-- Tab Navigation -->
+      <div class="tab-strip" role="tablist" aria-label="Analysis type">
+        <button class="tab-pill active" data-tab="image" role="tab" id="tbtn-image" aria-selected="true" aria-controls="tab-image">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          Image
+        </button>
+        <button class="tab-pill" data-tab="video" role="tab" id="tbtn-video" aria-selected="false" aria-controls="tab-video">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+          Video
+        </button>
+        <button class="tab-pill" data-tab="text" role="tab" id="tbtn-text" aria-selected="false" aria-controls="tab-text">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+          Text
+        </button>
+      </div>
+
+      <!-- ── IMAGE TAB ── -->
+      <div id="tab-image" class="tab-panel active" role="tabpanel" aria-labelledby="tbtn-image">
+        <div class="analyzer-layout">
+          <div class="panel glass input-col">
+            <div class="panel-hdr">
+              <div class="panel-title">Upload Image</div>
+            </div>
+
+            <div class="drop-zone" id="img-drop" tabindex="0" role="button" aria-label="Upload image file">
+              <input type="file" id="img-input" accept="image/*" hidden />
+              <div class="dz-inner">
+                <div class="dz-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg></div>
+                <strong>Drop image here or click to browse</strong>
+                <span class="dz-hint">PNG · JPG · WEBP · BMP — Max 100 MB</span>
               </div>
             </div>
-            <p class="hero-card-caption">Upload any media or paste text for instant authenticity scoring</p>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Features -->
-    <section id="features" class="section">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">Capabilities</span>
-          <h2>Everything you need to spot synthetic content</h2>
-          <p>Three specialized models working together to protect trust in digital media.</p>
-        </div>
-        <div class="features-grid">
-          <article class="feature-card glass">
-            <div class="feature-icon image">🖼</div>
-            <h3>Image Detection</h3>
-            <p>ResNet18 classifier trained on real vs fake images. Upload photos and get confidence scores with class probabilities.</p>
-            <a href="#analyze" class="feature-link" data-tab="image">Try image scan →</a>
-          </article>
-          <article class="feature-card glass">
-            <div class="feature-icon video">🎬</div>
-            <h3>Video Detection</h3>
-            <p>Extracts frames from video clips and aggregates per-frame deepfake scores using mean, max, or blended strategies.</p>
-            <a href="#analyze" class="feature-link" data-tab="video">Try video scan →</a>
-          </article>
-          <article class="feature-card glass">
-            <div class="feature-icon text">📝</div>
-            <h3>Text Detection</h3>
-            <p>DistilBERT model distinguishes human-written text from AI-generated content with tunable thresholds.</p>
-            <a href="#analyze" class="feature-link" data-tab="text">Try text scan →</a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section id="how-it-works" class="section section-alt">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">Process</span>
-          <h2>How TrueSource works</h2>
-        </div>
-        <div class="steps-grid">
-          <div class="step-card">
-            <div class="step-num">01</div>
-            <h3>Upload or paste</h3>
-            <p>Drop an image, video file, or paste any text you want to verify.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-num">02</div>
-            <h3>Model inference</h3>
-            <p>Your trained PyTorch models run locally — ResNet18 for media, DistilBERT for text.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-num">03</div>
-            <h3>Get results</h3>
-            <p>See verdict, confidence ring, probability breakdown, and inference time in milliseconds.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Analyze -->
-    <section id="analyze" class="section">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">Analyzer</span>
-          <h2>Run detection now</h2>
-          <p>Free to use — connected directly to your models in the <code>models/</code> folder.</p>
-        </div>
-
-        <div class="model-grid" id="model-grid"></div>
-
-        <div class="analyzer-tabs">
-          <button class="tab-btn active" data-tab="image">🖼 Image</button>
-          <button class="tab-btn" data-tab="video">🎬 Video</button>
-          <button class="tab-btn" data-tab="text">📝 Text</button>
-        </div>
-
-        <!-- Image tab -->
-        <div id="tab-image" class="tab-panel active">
-          <div class="grid-2">
-            <div class="panel glass">
-              <div class="panel-title">Upload image</div>
-              <div class="file-drop" id="img-drop">
-                <input type="file" id="img-input" accept="image/*" />
-                <div class="file-drop-icon">🖼</div>
-                <p><strong>Drop image here</strong> or click to browse</p>
-                <p class="file-hint">PNG · JPG · WEBP · BMP</p>
-              </div>
-              <img id="img-preview" class="preview-img hidden" alt="Preview" />
-              <div class="form-group" style="margin-top: 20px">
-                <label>P(fake) threshold <span class="range-value" id="img-thresh-val">0.42</span></label>
-                <input type="range" id="img-threshold" min="0.25" max="0.55" step="0.01" value="0.42" />
-              </div>
-              <button class="btn btn-primary" id="img-analyze" disabled style="width: 100%">Analyze image →</button>
+            <div class="media-preview-box hidden" id="img-preview-wrap">
+              <img id="img-preview" class="media-preview" alt="Preview" />
+              <button class="remove-btn" id="img-remove" aria-label="Remove file">✕</button>
             </div>
-            <div class="panel glass">
+
+            <div class="url-row">
+              <span class="url-or">or analyze by URL</span>
+              <div class="url-field">
+                <svg class="url-ic" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+                <input type="url" id="img-url-input" placeholder="https://example.com/photo.jpg" />
+                <button class="btn btn-outline btn-xs" id="img-url-btn">Fetch &amp; Scan</button>
+              </div>
+            </div>
+
+            <div class="ctrl-block">
+              <label class="ctrl-label">Fake Threshold <span class="ctrl-mono" id="img-thresh-val">0.42</span></label>
+              <input type="range" class="slider" id="img-threshold" min="0.25" max="0.75" step="0.01" value="0.42" />
+            </div>
+            <button class="btn btn-primary btn-wide" id="img-analyze" disabled>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              Analyze Image
+            </button>
+          </div>
+
+          <div class="panel glass result-col">
+            <div class="panel-hdr">
               <div class="panel-title">Results</div>
-              <div id="img-result">
-                <p class="placeholder-text">Upload an image to run the ResNet18 deepfake detector.</p>
-              </div>
+              <button class="btn btn-ghost btn-xs hidden" id="img-export" title="Download JSON report">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Export JSON
+              </button>
             </div>
-          </div>
-        </div>
-
-        <!-- Video tab -->
-        <div id="tab-video" class="tab-panel hidden">
-          <div class="grid-2">
-            <div class="panel glass">
-              <div class="panel-title">Upload video</div>
-              <div class="file-drop" id="vid-drop">
-                <input type="file" id="vid-input" accept="video/*" />
-                <div class="file-drop-icon">🎬</div>
-                <p><strong>Drop video here</strong> or click to browse</p>
-                <p class="file-hint">MP4 · AVI · MOV · MKV · WEBM</p>
+            <div id="img-result">
+              <div class="empty-state">
+                <div class="es-icon">🖼️</div>
+                <p>Upload or link an image to run the ResNet18 deepfake classifier.</p>
               </div>
-              <video id="vid-preview" class="preview-video hidden" controls></video>
-              <div class="settings-row" style="margin-top: 20px">
-                <div class="form-group" style="margin: 0">
-                  <label>P(fake) <span class="range-value" id="vid-thresh-val">0.42</span></label>
-                  <input type="range" id="vid-threshold" min="0.25" max="0.55" step="0.01" value="0.42" />
-                </div>
-                <div class="form-group" style="margin: 0">
-                  <label>Max frames</label>
-                  <select id="vid-frames">
-                    <option value="16">16</option>
-                    <option value="32" selected>32</option>
-                    <option value="48">48</option>
-                    <option value="64">64</option>
-                  </select>
-                </div>
-                <div class="form-group" style="margin: 0">
-                  <label>Aggregation</label>
-                  <select id="vid-aggregation">
-                    <option value="mean_max" selected>mean_max</option>
-                    <option value="max">max</option>
-                    <option value="mean">mean</option>
-                  </select>
-                </div>
-              </div>
-              <button class="btn btn-primary" id="vid-analyze" disabled style="width: 100%; margin-top: 16px">Analyze video →</button>
-            </div>
-            <div class="panel glass">
-              <div class="panel-title">Results</div>
-              <div id="vid-result">
-                <p class="placeholder-text">Upload a video for frame-level deepfake analysis.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Text tab -->
-        <div id="tab-text" class="tab-panel hidden">
-          <div class="grid-2">
-            <div class="panel glass">
-              <div class="panel-title">Input text</div>
-              <div class="form-group">
-                <textarea id="text-input" placeholder="Paste a paragraph, email, essay, or article…"></textarea>
-              </div>
-              <div class="form-group">
-                <label>P(AI) threshold <span class="range-value" id="text-thresh-val">0.50</span></label>
-                <input type="range" id="text-threshold" min="0.35" max="0.65" step="0.01" value="0.5" />
-              </div>
-              <button class="btn btn-primary" id="text-analyze" style="width: 100%">Analyze text →</button>
-            </div>
-            <div class="panel glass">
-              <div class="panel-title">Results</div>
-              <div id="text-result">
-                <p class="placeholder-text">Paste text to detect AI-generated content with DistilBERT.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel glass" style="margin-top: 24px">
-          <div class="grid-2">
-            <div>
-              <div class="panel-title">Recent scans</div>
-              <div class="history-list" id="history-list">
-                <p class="placeholder-text">No scans yet.</p>
-              </div>
-            </div>
-            <div>
-              <div class="panel-title">System info</div>
-              <div id="system-info" class="system-info"></div>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- About -->
-    <section id="about" class="section section-alt">
-      <div class="container">
-        <div class="about-grid">
-          <div class="about-content">
-            <span class="eyebrow">About TrueSource</span>
-            <h2>Built for trust in the age of generative AI</h2>
-            <p>
-              TrueSource is a multi-model authenticity platform that helps journalists, educators,
-              researchers, and everyday users verify whether images, videos, and text are genuine or
-              synthetically generated.
-            </p>
-            <p>
-              The project combines computer vision and natural language processing into a single
-              web experience — train your own models, deploy them locally, and analyze content
-              without sending data to third-party APIs.
-            </p>
-            <ul class="about-list">
-              <li>✓ Open-source friendly — runs entirely on your machine</li>
-              <li>✓ Image & video via ResNet18 frame classifier</li>
-              <li>✓ Text via fine-tuned DistilBERT</li>
-              <li>✓ Free to use with no account required</li>
-            </ul>
+      <!-- ── VIDEO TAB ── -->
+      <div id="tab-video" class="tab-panel hidden" role="tabpanel" aria-labelledby="tbtn-video">
+        <div class="analyzer-layout">
+          <div class="panel glass input-col">
+            <div class="panel-hdr">
+              <div class="panel-title">Upload Video</div>
+            </div>
+
+            <div class="drop-zone" id="vid-drop" tabindex="0" role="button" aria-label="Upload video file">
+              <input type="file" id="vid-input" accept="video/*" hidden />
+              <div class="dz-inner">
+                <div class="dz-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></div>
+                <strong>Drop video here or click to browse</strong>
+                <span class="dz-hint">MP4 · AVI · MOV · MKV · WEBM — Max 100 MB</span>
+              </div>
+            </div>
+
+            <div class="media-preview-box hidden" id="vid-preview-wrap">
+              <video id="vid-preview" class="media-preview" controls></video>
+              <button class="remove-btn" id="vid-remove" aria-label="Remove file">✕</button>
+            </div>
+
+            <div class="ctrl-block">
+              <label class="ctrl-label">Fake Threshold <span class="ctrl-mono" id="vid-thresh-val">0.42</span></label>
+              <input type="range" class="slider" id="vid-threshold" min="0.25" max="0.75" step="0.01" value="0.42" />
+            </div>
+            <div class="select-pair">
+              <div class="select-group">
+                <label>Max Frames</label>
+                <select id="vid-frames">
+                  <option value="16">16 frames</option>
+                  <option value="32" selected>32 frames</option>
+                  <option value="48">48 frames</option>
+                  <option value="64">64 frames</option>
+                </select>
+              </div>
+              <div class="select-group">
+                <label>Aggregation</label>
+                <select id="vid-aggregation">
+                  <option value="mean_max" selected>Mean-Max</option>
+                  <option value="max">Max only</option>
+                  <option value="mean">Mean only</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-wide" id="vid-analyze" disabled>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              Analyze Video
+            </button>
           </div>
-          <div class="about-cards">
-            <div class="about-stat-card glass">
-              <strong>Vision</strong>
-              <p>Make deepfake detection accessible to everyone, not just ML researchers.</p>
+
+          <div class="panel glass result-col">
+            <div class="panel-hdr">
+              <div class="panel-title">Results</div>
+              <button class="btn btn-ghost btn-xs hidden" id="vid-export" title="Download JSON report">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Export JSON
+              </button>
             </div>
-            <div class="about-stat-card glass">
-              <strong>Tech Stack</strong>
-              <p>PyTorch · Flask · Transformers · OpenCV · Custom trained weights</p>
-            </div>
-            <div class="about-stat-card glass">
-              <strong>Use Cases</strong>
-              <p>News verification, academic integrity, social media moderation, research.</p>
+            <div id="vid-result">
+              <div class="empty-state">
+                <div class="es-icon">🎬</div>
+                <p>Upload a video clip for frame-level deepfake analysis.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- Contact -->
-    <section id="contact" class="section">
-      <div class="container contact-grid">
+      <!-- ── TEXT TAB ── -->
+      <div id="tab-text" class="tab-panel hidden" role="tabpanel" aria-labelledby="tbtn-text">
+        <div class="analyzer-layout">
+          <div class="panel glass input-col">
+            <div class="panel-hdr">
+              <div class="panel-title">Text Input</div>
+              <div class="mode-switcher">
+                <button class="mode-btn active" id="mode-single" data-mode="single">Single</button>
+                <button class="mode-btn" id="mode-batch" data-mode="batch">Batch</button>
+              </div>
+            </div>
+
+            <!-- Single mode -->
+            <div id="txt-single">
+              <div class="textarea-wrap">
+                <textarea id="text-input" placeholder="Paste an email, essay, article, or any text here (min. 10 words)…" rows="9"></textarea>
+                <div class="txt-stats">
+                  <span id="word-count">0 words</span>
+                  <span class="txt-sep">·</span>
+                  <span id="char-count">0 chars</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Batch mode -->
+            <div id="txt-batch" class="hidden">
+              <div class="drop-zone batch-dz" id="txt-drop" tabindex="0" role="button">
+                <input type="file" id="txt-input" accept=".txt" hidden />
+                <div class="dz-inner">
+                  <div class="dz-icon sm"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6z"/></svg></div>
+                  <strong>Upload .txt file</strong>
+                  <span class="dz-hint">Each paragraph will be analyzed separately</span>
+                </div>
+              </div>
+              <div class="batch-summary hidden" id="batch-summary"></div>
+            </div>
+
+            <div class="ctrl-block">
+              <label class="ctrl-label">AI Threshold <span class="ctrl-mono" id="text-thresh-val">0.50</span></label>
+              <input type="range" class="slider" id="text-threshold" min="0.35" max="0.65" step="0.01" value="0.5" />
+            </div>
+            <button class="btn btn-primary btn-wide" id="text-analyze">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              Analyze Text
+            </button>
+          </div>
+
+          <div class="panel glass result-col">
+            <div class="panel-hdr">
+              <div class="panel-title">Results</div>
+              <button class="btn btn-ghost btn-xs hidden" id="text-export" title="Download JSON report">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Export JSON
+              </button>
+            </div>
+            <div id="text-result">
+              <div class="empty-state">
+                <div class="es-icon">📝</div>
+                <p>Enter text or upload a .txt file to evaluate with DistilBERT.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BOTTOM PANELS ── -->
+      <div class="bottom-row">
+        <div class="panel glass history-panel">
+          <div class="panel-hdr">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M13 3a9 9 0 1 0 9 9h-2c0 3.87-3.13 7-7 7s-7-3.13-7-7 3.13-7 7-7V3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+              Scan History
+            </div>
+            <button class="btn btn-ghost btn-xs" id="clear-history-btn">Clear</button>
+          </div>
+          <div class="history-list" id="history-list">
+            <div class="empty-state sm"><p>No scans recorded yet.</p></div>
+          </div>
+        </div>
+
+        <div class="panel glass system-panel">
+          <div class="panel-hdr">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
+              System Status
+            </div>
+          </div>
+          <div id="system-info" class="sys-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ABOUT ═══════════════ -->
+  <section id="about" class="section">
+    <div class="container">
+      <div class="about-layout">
+        <div class="about-text">
+          <span class="eyebrow">Platform Integrity</span>
+          <h2>Built for trust in the generative AI era</h2>
+          <p>TrueSource is a secure multi-model authenticity suite for researchers, content moderators, journalists, and developers. Verify file integrity locally — no API subscriptions, no data leaks.</p>
+          <div class="about-tags">
+            <span class="tag">100% Local Inference</span>
+            <span class="tag">PyTorch Backend</span>
+            <span class="tag">HuggingFace Hub</span>
+            <span class="tag">Open Source</span>
+            <span class="tag">Privacy First</span>
+          </div>
+          <div class="tech-stack">
+            <div class="tech-row">
+              <div class="tech-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa">CNN</div>
+              <div>
+                <strong>ResNet18</strong>
+                <span>Image &amp; Video deepfake detection via fine-tuned convolutional network</span>
+              </div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-icon" style="background:rgba(249,115,22,0.15);color:#fdba74">NLP</div>
+              <div>
+                <strong>DistilBERT</strong>
+                <span>AI-generated text classification via transformer fine-tuning</span>
+              </div>
+            </div>
+            <div class="tech-row">
+              <div class="tech-icon" style="background:rgba(14,165,233,0.15);color:#7dd3fc">HUB</div>
+              <div>
+                <strong>HuggingFace Hub</strong>
+                <span>Secure authenticated model storage and download</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="about-card-wrap">
+          <div class="glass about-card">
+            <div class="about-card-title">Use Cases</div>
+            <div class="use-case">
+              <span class="uc-icon">📰</span>
+              <div><strong>Journalism</strong><span>Verify images before publishing</span></div>
+            </div>
+            <div class="use-case">
+              <span class="uc-icon">🎓</span>
+              <div><strong>Academia</strong><span>Detect AI-written essays &amp; papers</span></div>
+            </div>
+            <div class="use-case">
+              <span class="uc-icon">🔒</span>
+              <div><strong>Security</strong><span>Identify synthetic media in fraud cases</span></div>
+            </div>
+            <div class="use-case">
+              <span class="uc-icon">💼</span>
+              <div><strong>Enterprise</strong><span>Content moderation at scale</span></div>
+            </div>
+            <div class="use-case">
+              <span class="uc-icon">🧑‍⚕️</span>
+              <div><strong>Healthcare</strong><span>Verify medical imagery authenticity</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="brand-logo sm" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none">
+            <polygon points="18,2 34,11 34,25 18,34 2,25 2,11" stroke="white" stroke-width="2.5" fill="none"/>
+            <circle cx="18" cy="18" r="5" fill="white" opacity="0.9"/>
+          </svg>
+        </div>
         <div>
-          <span class="eyebrow">Contact</span>
-          <h2>Get in touch</h2>
-          <p class="contact-desc">
-            Questions about TrueSource, model training, or integration? Send us a message.
-          </p>
-          <div class="contact-info">
-            <div class="contact-item">
-              <strong>Project</strong>
-              <span>TrueSource Detection Suite</span>
-            </div>
-            <div class="contact-item">
-              <strong>GitHub</strong>
-              <span>github.com/truesource</span>
-            </div>
-            <div class="contact-item">
-              <strong>Status</strong>
-              <span id="contact-model-status">Checking models…</span>
-            </div>
-          </div>
+          <strong>TrueSource</strong>
+          <p>Authenticity intelligence for images, videos, and text. Privacy-first, always local.</p>
         </div>
-        <form class="contact-form glass" id="contact-form">
-          <div class="form-group">
-            <label for="contact-name">Name</label>
-            <input type="text" id="contact-name" placeholder="Your name" required />
-          </div>
-          <div class="form-group">
-            <label for="contact-email">Email</label>
-            <input type="text" id="contact-email" placeholder="you@example.com" required />
-          </div>
-          <div class="form-group">
-            <label for="contact-message">Message</label>
-            <textarea id="contact-message" rows="4" placeholder="How can we help?" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%">Send message →</button>
-        </form>
       </div>
-    </section>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#analyze">Analyze</a>
+        <a href="#about">About</a>
+      </nav>
+      <p class="footer-copy">© 2026 TrueSource Platform &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Free &amp; Open Source</p>
+    </div>
+  </footer>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <div class="footer-brand">
-          <div class="brand-icon">TS</div>
-          <div>
-            <strong>TrueSource</strong>
-            <p>Authenticity intelligence for images, video & text.</p>
-          </div>
-        </div>
-        <div class="footer-links">
-          <a href="#home">Home</a>
-          <a href="#features">Features</a>
-          <a href="#analyze">Analyze</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
-        </div>
-        <p class="footer-copy">© 2026 TrueSource. Free to use · No sign-in required.</p>
-      </div>
-    </footer>
-
-    <script src="/js/api.js"></script>
-    <script src="/js/app.js"></script>
-  </body>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
 </html>
