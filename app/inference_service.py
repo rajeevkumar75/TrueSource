@@ -6,6 +6,8 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
+import io
+import requests
 import torch
 from PIL import Image
 from torchvision import transforms
@@ -38,6 +40,28 @@ _IMAGE_TRANSFORM = transforms.Compose(
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ]
 )
+
+USE_HF_API = os.getenv("USE_HF_API", "1") == "1"
+
+def _hf_api_request(model_repo: str, data: bytes | dict) -> dict | list:
+    token = os.getenv("HF_TOKEN")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    url = f"https://api-inference.huggingface.co/models/{model_repo}"
+    
+    for _ in range(3):
+        if isinstance(data, dict):
+            response = requests.post(url, headers=headers, json=data)
+        else:
+            response = requests.post(url, headers=headers, data=data)
+        
+        if response.status_code == 503:  # Model is loading
+            time.sleep(3)
+            continue
+            
+        response.raise_for_status()
+        return response.json()
+        
+    raise RuntimeError(f"HF API failed after retries for {model_repo}: {response.text}")
 
 
 def discover_class_names(dataset_root: Path | None = None) -> list[str]:
@@ -94,6 +118,14 @@ def warmup_models() -> dict[str, bool]:
     names = discover_class_names()
     loaded = {"image": False, "text": False}
     token = os.getenv("HF_TOKEN")
+
+    if USE_HF_API:
+        print("Using Hugging Face Inference API. Skipping local model load.")
+        loaded["image"] = True
+        _MODELS_LOADED["image"] = True
+        loaded["text"] = True
+        _MODELS_LOADED["text"] = True
+        return loaded
 
     try:
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=token)
@@ -159,6 +191,45 @@ def predict_image_upload(
 ) -> dict:
     started = time.perf_counter()
     names = class_names or discover_class_names()
+    
+    if USE_HF_API:
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format=image.format or 'JPEG')
+        img_bytes = img_byte_arr.getvalue()
+        try:
+            api_result = _hf_api_request(DEFAULT_IMAGE_REPO, img_bytes)
+            probabilities = {}
+            for item in api_result:
+                label = item.get("label", "").lower()
+                probabilities[label] = float(item.get("score", 0.0))
+            
+            for n in names:
+                if n not in probabilities:
+                    probabilities[n] = 0.0
+            
+            p_fake = probabilities.get("fake", 0.0)
+            if p_fake >= fake_threshold:
+                predicted_label = "fake"
+                decision = "Likely Fake"
+            else:
+                predicted_label = "real"
+                decision = "Likely Real"
+                
+            confidence = probabilities.get(predicted_label, 0.0)
+            elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
+            return {
+                "predicted_label": predicted_label,
+                "confidence": confidence,
+                "decision": decision,
+                "p_fake": float(p_fake),
+                "class_probabilities": probabilities,
+                "model": "ResNet18 (HF API)",
+                "inference_ms": elapsed_ms,
+            }
+        except Exception as e:
+            print(f"HF API image error: {e}")
+            raise e
+
     path = model_path
     if not path:
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
@@ -205,9 +276,13 @@ def predict_video_upload(
     started = time.perf_counter()
     names = class_names or discover_class_names()
     path = model_path
-    if not path:
+
+    if USE_HF_API:
+        max_frames = min(max_frames, 8)  # Avoid hitting API limits
+
+    if not path and not USE_HF_API:
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
-    if not Path(path).exists():
+    if not USE_HF_API and not Path(path).exists():
         raise FileNotFoundError(f"Video model not found: {path}")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix or ".mp4") as tmp:
@@ -215,11 +290,63 @@ def predict_video_upload(
         tmp_path = tmp.name
 
     try:
-        model, device = _get_image_model(path, len(names))
         frame_images = extract_video_frames(video_path=tmp_path, max_frames=max_frames)
         if not frame_images:
             raise ValueError("Could not extract frames from video.")
 
+        if USE_HF_API:
+            frame_fake_probs = []
+            for img in frame_images:
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format='JPEG')
+                img_bytes = img_byte_arr.getvalue()
+                api_result = _hf_api_request(DEFAULT_IMAGE_REPO, img_bytes)
+                
+                p_fake = 0.0
+                for item in api_result:
+                    if item.get("label", "").lower() == "fake":
+                        p_fake = float(item.get("score", 0.0))
+                frame_fake_probs.append(p_fake)
+            
+            frame_fake = torch.tensor(frame_fake_probs)
+            aggregated_fake = aggregate_fake_probability(
+                frame_fake,
+                mode=frame_aggregation,
+                mean_max_weight=mean_max_weight,
+            )
+            
+            fake_idx = resolve_fake_class_index(names)
+            real_idx = 1 - fake_idx
+            synthetic_probs = torch.zeros(2, dtype=torch.float32)
+            synthetic_probs[fake_idx] = float(aggregated_fake)
+            synthetic_probs[real_idx] = max(0.0, 1.0 - aggregated_fake)
+            predicted_label, decision, p_fake_val = binary_decision_from_two_class_probs(
+                synthetic_probs,
+                names,
+                fake_probability_threshold=fake_threshold,
+            )
+            confidence = float(
+                aggregated_fake
+                if predicted_label == names[fake_idx]
+                else max(0.0, 1.0 - aggregated_fake)
+            )
+            class_probability_map = {
+                names[i]: float(synthetic_probs[i].item()) for i in range(2)
+            }
+            elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
+            return {
+                "predicted_label": predicted_label,
+                "confidence": confidence,
+                "decision": decision,
+                "p_fake": float(p_fake_val),
+                "class_probabilities": class_probability_map,
+                "total_frames_used": len(frame_images),
+                "frame_aggregation": frame_aggregation,
+                "model": "Frame-level ResNet18 (HF API)",
+                "inference_ms": elapsed_ms,
+            }
+
+        model, device = _get_image_model(path, len(names))
         frame_tensors = torch.stack(
             [_IMAGE_TRANSFORM(image) for image in frame_images]
         ).to(device)
@@ -280,6 +407,42 @@ def predict_text_input(
     threshold = ai_threshold
     if threshold is None:
         threshold = load_ai_threshold(path)
+
+    if USE_HF_API:
+        try:
+            api_result = _hf_api_request(DEFAULT_TEXT_REPO, {"inputs": text})
+            if isinstance(api_result, list) and len(api_result) > 0 and isinstance(api_result[0], list):
+                api_result = api_result[0]
+            
+            probabilities = {}
+            for item in api_result:
+                label = item.get("label", "").lower()
+                probabilities[label] = float(item.get("score", 0.0))
+                
+            p_ai = probabilities.get("ai", 0.0)
+            if p_ai >= threshold:
+                predicted_label = "ai"
+                decision = "Likely AI-generated"
+            else:
+                predicted_label = "human"
+                decision = "Likely Human-written"
+                
+            confidence = probabilities.get(predicted_label, 0.0)
+            elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
+            return {
+                "predicted_label": predicted_label,
+                "confidence": confidence,
+                "decision": decision,
+                "class_probabilities": probabilities,
+                "p_ai": float(p_ai),
+                "word_count": len(text.split()),
+                "model": "DistilBERT (HF API)",
+                "inference_ms": elapsed_ms,
+                "ai_threshold": threshold,
+            }
+        except Exception as e:
+            print(f"HF API text error: {e}")
+            raise e
 
     _ensure_text_model(path)
     result = predict_text(text=text, model_path=path, ai_threshold=threshold)
