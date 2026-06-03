@@ -1,28 +1,15 @@
 from __future__ import annotations
 
+import io
+import json
 import os
 import tempfile
 import time
 from functools import lru_cache
 from pathlib import Path
 
-import io
 import requests
-import torch
 from PIL import Image
-from torchvision import transforms
-from huggingface_hub import hf_hub_download
-
-from src.image_detection.data_transformation import IMAGENET_MEAN, IMAGENET_STD
-from src.image_detection.inference_utils import (
-    aggregate_fake_probability,
-    binary_decision_from_two_class_probs,
-    resolve_fake_class_index,
-)
-from src.image_detection.model_trainer import create_model
-from src.text_detection.inference_utils import _load_model_and_tokenizer, load_ai_threshold
-from src.text_detection.predict import predict_text
-from src.video_detection.frame_extractor import extract_video_frames
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_IMAGE_REPO = "rajeevkumar75/truesource-image-detector"
@@ -32,14 +19,6 @@ DEFAULT_TEXT_REPO = "rajeevkumar75/truesource-text-model"
 DEFAULT_DATASET_ROOT = PROJECT_ROOT / "data" / "deepfake_images"
 IMAGE_SIZE = 224
 _MODELS_LOADED = {"image": False, "text": False}
-
-_IMAGE_TRANSFORM = transforms.Compose(
-    [
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-    ]
-)
 
 USE_HF_API = os.getenv("USE_HF_API", "1") == "1"
 
@@ -66,6 +45,7 @@ def _hf_api_request(model_repo: str, data: bytes | dict) -> dict | list:
 
 def discover_class_names(dataset_root: Path | None = None) -> list[str]:
     try:
+        from huggingface_hub import hf_hub_download
         token = os.getenv("HF_TOKEN")
         cached_file = hf_hub_download(
             repo_id=DEFAULT_IMAGE_REPO, 
@@ -98,8 +78,29 @@ def discover_class_names(dataset_root: Path | None = None) -> list[str]:
     return ["fake", "real"]
 
 
+def _load_ai_threshold(model_path: str) -> float:
+    DEFAULT_AI_THRESHOLD = 0.5
+    try:
+        if Path(model_path).exists():
+            config_file = Path(model_path) / "inference.json"
+            if not config_file.exists():
+                return DEFAULT_AI_THRESHOLD
+            payload = json.loads(config_file.read_text(encoding="utf-8"))
+        else:
+            from huggingface_hub import hf_hub_download
+            token = os.getenv("HF_TOKEN")
+            cached = hf_hub_download(repo_id=model_path, filename="inference.json", token=token)
+            payload = json.loads(Path(cached).read_text(encoding="utf-8"))
+            
+        return float(payload.get("ai_threshold", DEFAULT_AI_THRESHOLD))
+    except Exception:
+        return DEFAULT_AI_THRESHOLD
+
+
 @lru_cache(maxsize=1)
-def _get_image_model(model_path: str, class_count: int) -> tuple[torch.nn.Module, torch.device]:
+def _get_image_model(model_path: str, class_count: int):
+    import torch
+    from src.image_detection.model_trainer import create_model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = create_model(num_classes=class_count, freeze_backbone=False)
     state_dict = torch.load(Path(model_path), map_location=device)
@@ -110,6 +111,7 @@ def _get_image_model(model_path: str, class_count: int) -> tuple[torch.nn.Module
 
 
 def _ensure_text_model(model_path: str) -> None:
+    from src.text_detection.inference_utils import _load_model_and_tokenizer
     _load_model_and_tokenizer(model_path)
 
 
@@ -128,6 +130,7 @@ def warmup_models() -> dict[str, bool]:
         return loaded
 
     try:
+        from huggingface_hub import hf_hub_download
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=token)
         _get_image_model(path, len(names))
         loaded["image"] = True
@@ -150,18 +153,22 @@ def get_models_loaded() -> dict[str, bool]:
 
 
 def get_app_status() -> dict:
-    text_threshold = 0.5
-    try:
-        text_threshold = load_ai_threshold(DEFAULT_TEXT_REPO)
-    except Exception:  # noqa: BLE001
-        pass
+    text_threshold = _load_ai_threshold(DEFAULT_TEXT_REPO)
+    
+    device = "cpu"
+    if not USE_HF_API:
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            pass
 
     return {
         "image_model": True,
         "text_model": True,
         "video_model": True,
         "class_names": discover_class_names(),
-        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "device": device,
         "models": {
             "image": {
                 "path": DEFAULT_IMAGE_REPO,
@@ -231,13 +238,25 @@ def predict_image_upload(
             raise e
 
     path = model_path
+    from huggingface_hub import hf_hub_download
     if not path:
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
     if not Path(path).exists():
         raise FileNotFoundError(f"Image model not found: {path}")
 
+    import torch
+    from torchvision import transforms
+    from src.image_detection.data_transformation import IMAGENET_MEAN, IMAGENET_STD
+    from src.image_detection.inference_utils import binary_decision_from_two_class_probs
+    
+    image_transform = transforms.Compose([
+        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+    ])
+
     model, device = _get_image_model(path, len(names))
-    tensor = _IMAGE_TRANSFORM(image.convert("RGB")).unsqueeze(0).to(device)
+    tensor = image_transform(image.convert("RGB")).unsqueeze(0).to(device)
     with torch.no_grad():
         logits = model(tensor)
         probabilities = torch.softmax(logits, dim=1).squeeze(0).cpu()
@@ -276,11 +295,13 @@ def predict_video_upload(
     started = time.perf_counter()
     names = class_names or discover_class_names()
     path = model_path
+    from src.video_detection.frame_extractor import extract_video_frames
 
     if USE_HF_API:
         max_frames = min(max_frames, 8)  # Avoid hitting API limits
 
     if not path and not USE_HF_API:
+        from huggingface_hub import hf_hub_download
         path = hf_hub_download(repo_id=DEFAULT_IMAGE_REPO, filename=DEFAULT_IMAGE_FILENAME, token=os.getenv("HF_TOKEN"))
     if not USE_HF_API and not Path(path).exists():
         raise FileNotFoundError(f"Video model not found: {path}")
@@ -308,30 +329,41 @@ def predict_video_upload(
                         p_fake = float(item.get("score", 0.0))
                 frame_fake_probs.append(p_fake)
             
-            frame_fake = torch.tensor(frame_fake_probs)
-            aggregated_fake = aggregate_fake_probability(
-                frame_fake,
-                mode=frame_aggregation,
-                mean_max_weight=mean_max_weight,
-            )
+            if frame_aggregation == "mean_max":
+                mean_prob = sum(frame_fake_probs) / len(frame_fake_probs)
+                max_prob = max(frame_fake_probs)
+                aggregated_fake = (mean_max_weight * max_prob) + ((1.0 - mean_max_weight) * mean_prob)
+            elif frame_aggregation == "max":
+                aggregated_fake = max(frame_fake_probs)
+            else:
+                aggregated_fake = sum(frame_fake_probs) / len(frame_fake_probs)
             
-            fake_idx = resolve_fake_class_index(names)
+            fake_idx = 0 if len(names) > 0 and names[0].lower() == 'fake' else 1
+            if 'fake' in names:
+                fake_idx = names.index('fake')
+                
             real_idx = 1 - fake_idx
-            synthetic_probs = torch.zeros(2, dtype=torch.float32)
+            
+            synthetic_probs = [0.0, 0.0]
             synthetic_probs[fake_idx] = float(aggregated_fake)
             synthetic_probs[real_idx] = max(0.0, 1.0 - aggregated_fake)
-            predicted_label, decision, p_fake_val = binary_decision_from_two_class_probs(
-                synthetic_probs,
-                names,
-                fake_probability_threshold=fake_threshold,
-            )
+            
+            if synthetic_probs[fake_idx] >= fake_threshold:
+                predicted_label = names[fake_idx]
+                decision = "Likely Fake"
+            else:
+                predicted_label = names[real_idx]
+                decision = "Likely Real"
+                
+            p_fake_val = synthetic_probs[fake_idx]
+            
             confidence = float(
                 aggregated_fake
                 if predicted_label == names[fake_idx]
                 else max(0.0, 1.0 - aggregated_fake)
             )
             class_probability_map = {
-                names[i]: float(synthetic_probs[i].item()) for i in range(2)
+                names[i]: float(synthetic_probs[i]) for i in range(2)
             }
             elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
             return {
@@ -346,9 +378,20 @@ def predict_video_upload(
                 "inference_ms": elapsed_ms,
             }
 
+        import torch
+        from torchvision import transforms
+        from src.image_detection.data_transformation import IMAGENET_MEAN, IMAGENET_STD
+        from src.image_detection.inference_utils import aggregate_fake_probability, binary_decision_from_two_class_probs, resolve_fake_class_index
+
+        image_transform = transforms.Compose([
+            transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        ])
+
         model, device = _get_image_model(path, len(names))
         frame_tensors = torch.stack(
-            [_IMAGE_TRANSFORM(image) for image in frame_images]
+            [image_transform(image) for image in frame_images]
         ).to(device)
         fake_idx = resolve_fake_class_index(names)
 
@@ -406,7 +449,7 @@ def predict_text_input(
 
     threshold = ai_threshold
     if threshold is None:
-        threshold = load_ai_threshold(path)
+        threshold = _load_ai_threshold(path)
 
     if USE_HF_API:
         try:
@@ -444,6 +487,7 @@ def predict_text_input(
             print(f"HF API text error: {e}")
             raise e
 
+    from src.text_detection.predict import predict_text
     _ensure_text_model(path)
     result = predict_text(text=text, model_path=path, ai_threshold=threshold)
     elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
