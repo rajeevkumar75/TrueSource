@@ -25,22 +25,36 @@ USE_HF_API = os.getenv("USE_HF_API", "1") == "1"
 def _hf_api_request(model_repo: str, data: bytes | dict) -> dict | list:
     token = os.getenv("HF_TOKEN")
     headers = {"Authorization": f"Bearer {token}"} if token else {}
-    url = f"https://api-inference.huggingface.co/models/{model_repo}"
     
-    for _ in range(3):
-        if isinstance(data, dict):
-            response = requests.post(url, headers=headers, json=data)
-        else:
-            response = requests.post(url, headers=headers, data=data)
-        
-        if response.status_code == 503:  # Model is loading
-            time.sleep(3)
-            continue
-            
-        response.raise_for_status()
-        return response.json()
-        
-    raise RuntimeError(f"HF API failed after retries for {model_repo}: {response.text}")
+    # Render sometimes fails to resolve the primary HF domain, so we provide a fallback
+    endpoints = [
+        f"https://api-inference.huggingface.co/models/{model_repo}",
+        f"https://router.huggingface.co/hf-inference/models/{model_repo}"
+    ]
+    
+    last_error = None
+    for url in endpoints:
+        for _ in range(3):
+            try:
+                if isinstance(data, dict):
+                    response = requests.post(url, headers=headers, json=data)
+                else:
+                    response = requests.post(url, headers=headers, data=data)
+                
+                if response.status_code == 503:  # Model is loading
+                    time.sleep(3)
+                    continue
+                    
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                last_error = e
+                # If DNS fails, don't retry the same URL, move to the fallback URL
+                if "No address associated with hostname" in str(e) or "NameResolutionError" in str(e):
+                    break
+                time.sleep(1)
+                
+    raise RuntimeError(f"HF API failed after all retries for {model_repo}. Last error: {last_error}")
 
 
 def discover_class_names(dataset_root: Path | None = None) -> list[str]:
