@@ -1,0 +1,12 @@
+# Lightweight requirements for Render deployment (USE_HF_API=1 mode).
+# Does NOT include torch/torchvision/transformers — all inference is
+# delegated to the Hugging Face Inference API, keeping RAM under 512 MB.
+
+flask
+gunicorn
+Pillow
+opencv-python-headless
+requests
+pyyaml
+python-dotenv
+huggingface_hub

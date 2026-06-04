@@ -1,4 +1,4 @@
-"""Start the TrueSource web application (Render entry-point)."""
+"""Start the TrueSource web application."""
 from app.web_server import main
 
 if __name__ == "__main__":

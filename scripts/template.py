@@ -59,10 +59,20 @@ list_of_files = [
     "src/pipeline/predict_pipeline.py",
 
     # App
-    "app/app.py",
+    "app/web_server.py",
+    "app/inference_service.py",
+
+    # Scripts
+    "scripts/train_image.py",
+    "scripts/train_text.py",
+    "scripts/predict_text.py",
+    
+    # Tests
+    "tests/verify_local.py",
+    "tests/test_hf_api.py",
 
     # Main entry
-    "main.py",
+    "run_app.py",
 ]
 
 

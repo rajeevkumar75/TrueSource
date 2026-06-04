@@ -12,6 +12,12 @@ FRONTEND_DIR = PROJECT_ROOT / "frontend"
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
+except ImportError:
+    pass
+
 from app.inference_service import (  # noqa: E402
     get_app_status,
     get_models_loaded,
@@ -124,23 +130,41 @@ def api_predict_text():
     return jsonify(result)
 
 
+@app.get("/healthz")
+def healthz():
+    return jsonify({"status": "ok"})
+
+
+def _background_warmup() -> None:
+    """Warm up models in a background thread so port binding is not blocked."""
+    import threading
+    import time
+
+    def _warmup():
+        # Small delay to let the server finish binding
+        time.sleep(2)
+        print("Background: loading ML models…")
+        try:
+            loaded = warmup_models()
+            print(f"Background: models ready: {loaded}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"Background: model warmup warning: {exc}")
+
+    t = threading.Thread(target=_warmup, daemon=True)
+    t.start()
+
+
 def main() -> None:
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except ImportError:
-        pass
 
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"
     print(f"TrueSource web app: http://{host}:{port}")
-    print("Loading ML models into memory…")
-    try:
-        loaded = warmup_models()
-        print(f"Models ready: {loaded}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"Model warmup warning: {exc}")
+
+    # Start model warmup in a background thread so the port binds immediately.
+    # Render times out if no port is detected within ~5 minutes.
+    _background_warmup()
+
     app.run(host=host, port=port, debug=debug)
 
 
